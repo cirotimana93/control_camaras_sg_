@@ -1,0 +1,11 @@
+services:
+  cctv-monitoring:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cctv-monitoring-daemon
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Lima

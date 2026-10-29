@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.git
+.gitignore
+.env.local
+node_modules/
+dist/
+build/
+*.xlsx

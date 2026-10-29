@@ -1,0 +1,4 @@
+__pycache__
+.env
+queries.sql
+*__pycache__
