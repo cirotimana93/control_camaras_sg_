@@ -1,6 +1,13 @@
 import sys
 import time
+from pathlib import Path
 from datetime import datetime
+
+# devCt: asegura que la raiz del proyecto este siempre en sys.path al correr como script o dentro del contenedor
+projectRoot = str(Path(__file__).resolve().parent.parent)
+if projectRoot not in sys.path:
+    sys.path.insert(0, projectRoot)
+
 from src.config import Config
 from src.services.MonthlyReportService import MonthlyReportService
 from src.services.DailyAlertService import DailyAlertService

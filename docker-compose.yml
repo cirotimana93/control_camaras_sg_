@@ -9,3 +9,4 @@ services:
       - .env
     environment:
       - TZ=America/Lima
+      - PYTHONPATH=/app
