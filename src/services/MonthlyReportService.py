@@ -3,11 +3,12 @@ import pandas as pd
 from datetime import datetime, timedelta
 from src.db import getDbConnection
 from src.utils.dateUtils import compressDateList
+from src.utils.trackingUtils import getTrackingChannelsMap
 
 class MonthlyReportService:
 
     @staticmethod
-    def getMonthlyRecordingStatus(daysBack: int = 30) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def getMonthlyRecordingStatus(daysBack: int = 30) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         now = datetime.now()
         # devCt: generacion de ventana movil exacta de ultimos n dias (d-30 a hoy)
         targetDates = [(now.date() - timedelta(days=i)) for i in range(daysBack - 1, -1, -1)]
@@ -42,10 +43,20 @@ class MonthlyReportService:
         ORDER BY s.name, cal.channel;
         """
 
+        activeStoresQuery = """
+        SELECT ceco, name 
+        FROM sch_cctv.tbl_store 
+        WHERE status = 1 AND delete_at IS NULL 
+        ORDER BY ceco;
+        """
+
         with getDbConnection() as connection:
             with connection.cursor() as cursor:
                 cursor.execute(query, (requiredMonths,))
                 rows = cursor.fetchall()
+
+                cursor.execute(activeStoresQuery)
+                activeStores = cursor.fetchall()
 
         # organizar mascaras por camara y mes
         cameraMap = {}
@@ -145,4 +156,45 @@ class MonthlyReportService:
             ascending=[False, False]
         )
 
-        return cameraDf, summaryDf
+        # devCt: generacion de hoja comparativa con listado maestro de tracking (solo tiendas activas)
+        trackingMap = getTrackingChannelsMap()
+        cameraGroupByCeco = dict(tuple(cameraDf.groupby("ceco"))) if len(cameraDf) > 0 else {}
+        comparisonList = []
+
+        for storeCeco, storeName in activeStores:
+            if storeCeco in cameraGroupByCeco:
+                group = cameraGroupByCeco[storeCeco]
+                totalCams = len(group)
+                activeCams = len(group[group["estado actual"] == "GRABANDO"])
+                inactiveCams = totalCams - activeCams
+            else:
+                totalCams = 0
+                activeCams = 0
+                inactiveCams = 0
+
+            # devCt: calculo de discrepancias frente al tracking maestro (col c vs col f)
+            if storeCeco in trackingMap:
+                trackingVal = trackingMap[storeCeco]
+                trackingDisplay = trackingVal
+                diff = totalCams - trackingVal
+                if diff == 0:
+                    discrepancyText = "Sin discrepancias"
+                else:
+                    discrepancyText = f"Discrepancia ({diff})"
+            else:
+                trackingDisplay = "Sin informacion segun listado"
+                discrepancyText = "Sin informacion segun listado"
+
+            comparisonList.append({
+                "ceco": storeCeco,
+                "tienda": storeName,
+                "total de camaras": totalCams,
+                "total de camaras activas": activeCams,
+                "total de camaras inactivas": inactiveCams,
+                "total de camaras segun el listado": trackingDisplay,
+                "discrepancias": discrepancyText
+            })
+
+        comparisonDf = pd.DataFrame(comparisonList).sort_values("ceco")
+
+        return cameraDf, summaryDf, comparisonDf

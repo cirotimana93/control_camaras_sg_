@@ -49,6 +49,20 @@ class ExcelExportService:
                 "Criticidad": "INFORMATIVA",
                 "Significado Tecnico": "Listado de fechas especificas (dia/mes) o rangos de dias donde se identifico perdida o interrupcion de grabacion.",
                 "Accion Recomendada": "Utilizar como sustento para identificar eventos de corte o fechas de inicio de falla."
+            },
+            {
+                "Concepto / Columna": "total de camaras segun el listado",
+                "Tipo": "Metrica Comparativa",
+                "Criticidad": "INFORMATIVA",
+                "Significado Tecnico": "Cantidad de canales operativos registrados para la tienda en el documento maestro de tracking (migracion iVMS & Hik-Connect). Muestra 'Sin informacion segun listado' si el CECO no figura en dicho archivo.",
+                "Accion Recomendada": "Comparar contra 'total de camaras' para validar que todas las camaras registradas en tienda esten migradas."
+            },
+            {
+                "Concepto / Columna": "discrepancias",
+                "Tipo": "Metrica Comparativa",
+                "Criticidad": "ALERTA",
+                "Significado Tecnico": "Comparacion entre 'total de camaras' (Col C) y 'total de camaras segun el listado' (Col F). Indica 'Sin discrepancias' si coinciden, 'Discrepancia (N)' con la diferencia exacta si difieren, o 'Sin informacion segun listado' si no esta en el archivo de tracking.",
+                "Accion Recomendada": "Priorizar tiendas con discrepancia negativa para verificar canales que falten por registrar o migrar."
             }
         ]
         return pd.DataFrame(legendData)
@@ -103,6 +117,18 @@ class ExcelExportService:
                 "Criticidad": "NORMAL",
                 "Significado Tecnico": "Operatividad normal. La camara y el DVR estan sincronizados y almacenando video continuo en disco.",
                 "Accion Recomendada": "Ninguna accion requerida."
+            },
+            {
+                "Estado Actual": "total de camaras segun el listado",
+                "Criticidad": "INFORMATIVA",
+                "Significado Tecnico": "Cantidad de canales operativos registrados en el documento maestro de tracking (migracion iVMS & Hik-Connect). Muestra 'Sin informacion segun listado' si el CECO no figura.",
+                "Accion Recomendada": "Comparar contra 'total de camaras' para identificar desfasajes entre el inventario y el listado de migracion."
+            },
+            {
+                "Estado Actual": "discrepancias",
+                "Criticidad": "ALERTA",
+                "Significado Tecnico": "Comparacion matematica entre 'total de camaras' (Col C) y el listado de tracking (Col F). 'Sin discrepancias' (coinciden), 'Discrepancia (N)' (diferencia), o 'Sin informacion segun listado'.",
+                "Accion Recomendada": "Revisar tiendas con discrepancia para auditar consistencia con el inventario fisico."
             }
         ]
         return pd.DataFrame(legendData)
@@ -146,7 +172,7 @@ class ExcelExportService:
             worksheet.column_dimensions[colLetter].width = min(max(maxLen + 4, 14), 50)
 
     @staticmethod
-    def createMonthlyExcel(cameraDf: pd.DataFrame, summaryDf: pd.DataFrame) -> bytes:
+    def createMonthlyExcel(cameraDf: pd.DataFrame, summaryDf: pd.DataFrame, comparisonDf: pd.DataFrame) -> bytes:
         outputBuffer = io.BytesIO()
         legendDf = ExcelExportService.getMonthlyLegendDataFrame()
         
@@ -156,11 +182,13 @@ class ExcelExportService:
         
         with pd.ExcelWriter(outputBuffer, engine="openpyxl") as writer:
             summaryDf.to_excel(writer, sheet_name="Resumen por DVR", index=False)
+            comparisonDf.to_excel(writer, sheet_name="Comparativo Canales", index=False)
             observedDf.to_excel(writer, sheet_name="Camaras Observadas", index=False)
             cameraDf.to_excel(writer, sheet_name="Todas las Camaras", index=False)
             legendDf.to_excel(writer, sheet_name="Leyenda Mensual", index=False)
             
             ExcelExportService.styleWorksheet(writer.sheets["Resumen por DVR"], "1F4E79")
+            ExcelExportService.styleWorksheet(writer.sheets["Comparativo Canales"], "0D5C75")
             ExcelExportService.styleWorksheet(writer.sheets["Camaras Observadas"], "C00000")
             ExcelExportService.styleWorksheet(writer.sheets["Todas las Camaras"], "1F4E79")
             ExcelExportService.styleWorksheet(writer.sheets["Leyenda Mensual"], "333F48")
@@ -169,17 +197,19 @@ class ExcelExportService:
         return outputBuffer.getvalue()
 
     @staticmethod
-    def createDailyAlertsExcel(cameraDf: pd.DataFrame, summaryDf: pd.DataFrame) -> bytes:
+    def createDailyAlertsExcel(cameraDf: pd.DataFrame, summaryDf: pd.DataFrame, comparisonDf: pd.DataFrame) -> bytes:
         outputBuffer = io.BytesIO()
         legendDf = ExcelExportService.getDailyLegendDataFrame()
         
         with pd.ExcelWriter(outputBuffer, engine="openpyxl") as writer:
             cameraDf.to_excel(writer, sheet_name="Alertas por Camara", index=False)
             summaryDf.to_excel(writer, sheet_name="Resumen por DVR", index=False)
+            comparisonDf.to_excel(writer, sheet_name="Comparativo Canales", index=False)
             legendDf.to_excel(writer, sheet_name="Leyenda Alertas Diarias", index=False)
             
             ExcelExportService.styleWorksheet(writer.sheets["Alertas por Camara"], "C00000")
             ExcelExportService.styleWorksheet(writer.sheets["Resumen por DVR"], "1F4E79")
+            ExcelExportService.styleWorksheet(writer.sheets["Comparativo Canales"], "0D5C75")
             ExcelExportService.styleWorksheet(writer.sheets["Leyenda Alertas Diarias"], "333F48")
 
         outputBuffer.seek(0)

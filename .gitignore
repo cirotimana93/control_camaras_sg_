@@ -2,3 +2,5 @@ __pycache__
 .env
 queries.sql
 *__pycache__
+
+context/*

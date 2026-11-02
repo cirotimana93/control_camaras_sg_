@@ -106,8 +106,8 @@ def buildHtmlSummary(monthlyDf, cameraDf, summaryDf, runTimestamp: str) -> str:
             <p style="margin-top: 15px;">
                 Se adjuntan los 2 reportes detallados en formato Excel:
                 <ul>
-                    <li><b>Historico del mes (-30 dias):</b> Pestanas con Camaras Observadas, Detalle General y Leyenda de Estados.</li>
-                    <li><b>Alertas del dia (D-1 a hoy):</b> Pestanas con Alertas por Camara, Resumen por DVR y Leyenda de Estados.</li>
+                    <li><b>Historico del mes (-30 dias):</b> Pestanas con Resumen por DVR, Comparativo Canales (vs listado maestro de tracking), Camaras Observadas, Todas las Camaras y Leyenda Mensual.</li>
+                    <li><b>Alertas del dia (D-1 a hoy):</b> Pestanas con Alertas por Camara, Resumen por DVR, Comparativo Canales (vs listado maestro de tracking) y Leyenda Alertas Diarias.</li>
                 </ul>
             </p>
 
@@ -130,15 +130,15 @@ def executeMonitoringJob():
     try:
         # 1. extraer datos
         print("[info] consultando reporte mensual de camaras (30 dias)...")
-        monthlyCameraDf, monthlySummaryDf = MonthlyReportService.getMonthlyRecordingStatus(30)
+        monthlyCameraDf, monthlySummaryDf, monthlyComparisonDf = MonthlyReportService.getMonthlyRecordingStatus(30)
         
         print("[info] consultando alertas urgentes de dvrs y detalle de camaras (ultimas 24-48h)...")
-        cameraDf, summaryDf = DailyAlertService.getDailyAlerts(48)
+        cameraDf, summaryDf, dailyComparisonDf = DailyAlertService.getDailyAlerts(48)
         
         # 2. generar libros excel
-        print("[info] generando archivos excel con pestana de resumen, leyenda y detalle por camara...")
-        monthlyExcelBytes = ExcelExportService.createMonthlyExcel(monthlyCameraDf, monthlySummaryDf)
-        dailyExcelBytes = ExcelExportService.createDailyAlertsExcel(cameraDf, summaryDf)
+        print("[info] generando archivos excel con pestana de comparativo de canales, resumen y detalle...")
+        monthlyExcelBytes = ExcelExportService.createMonthlyExcel(monthlyCameraDf, monthlySummaryDf, monthlyComparisonDf)
+        dailyExcelBytes = ExcelExportService.createDailyAlertsExcel(cameraDf, summaryDf, dailyComparisonDf)
         
         monthlyFileName = f"reporte_historico_camaras_mes_{dateStamp}.xlsx"
         dailyFileName = f"reporte_alertas_dvr_dia_{dateStamp}.xlsx"

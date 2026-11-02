@@ -2,11 +2,12 @@ from typing import Tuple
 import pandas as pd
 from src.db import getDbConnection
 from src.utils.dateUtils import formatDuration
+from src.utils.trackingUtils import getTrackingChannelsMap
 
 class DailyAlertService:
 
     @staticmethod
-    def getDailyAlerts(hoursInterval: int = 48) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def getDailyAlerts(hoursInterval: int = 48) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         # devCt: consulta combinada de estado general de dvr y detalle de cada camara
         query = """
         WITH latest_camera_status AS (
@@ -60,10 +61,27 @@ class DailyAlertService:
         ORDER BY d.minutes_since_last_report DESC NULLS FIRST, d.store_name, lc.channel;
         """
 
+        comparisonQuery = """
+        SELECT 
+            s.ceco,
+            s.name AS store_name,
+            COALESCE(d.reported_channels, 0) AS reported_channels,
+            COALESCE(d.recording_channels, 0) AS recording_channels
+        FROM sch_cctv.tbl_store s
+        LEFT JOIN sch_cctv.fn_getstoredvrmonitoringsummary(%s) d ON d.store_ceco = s.ceco
+        WHERE s.status = 1 AND s.delete_at IS NULL
+        ORDER BY s.ceco;
+        """
+
+        trackingMap = getTrackingChannelsMap()
+
         with getDbConnection() as connection:
             with connection.cursor() as cursor:
                 cursor.execute(query, (hoursInterval,))
                 rows = cursor.fetchall()
+
+                cursor.execute(comparisonQuery, (hoursInterval,))
+                compDbRows = cursor.fetchall()
 
         cameraRows = []
         storeMap = {}
@@ -131,6 +149,36 @@ class DailyAlertService:
                 "detalle": info["detail"]
             })
 
+        # devCt: generacion de comparativo de canales diario con el listado maestro de tracking (solo tiendas activas)
+        comparisonRows = []
+        for r in compDbRows:
+            storeCeco, storeName, reportedCh, recordingCh = r
+            inactiveCh = max(0, reportedCh - recordingCh)
+
+            # devCt: calculo de discrepancias frente al tracking maestro (col c vs col f)
+            if storeCeco in trackingMap:
+                trackingVal = trackingMap[storeCeco]
+                trackingDisplay = trackingVal
+                diff = reportedCh - trackingVal
+                if diff == 0:
+                    discrepancyText = "Sin discrepancias"
+                else:
+                    discrepancyText = f"Discrepancia ({diff})"
+            else:
+                trackingDisplay = "Sin informacion segun listado"
+                discrepancyText = "Sin informacion segun listado"
+
+            comparisonRows.append({
+                "ceco": storeCeco,
+                "tienda": storeName,
+                "total de camaras": reportedCh,
+                "total de camaras activas": recordingCh,
+                "total de camaras inactivas": inactiveCh,
+                "total de camaras segun el listado": trackingDisplay,
+                "discrepancias": discrepancyText
+            })
+
         cameraDf = pd.DataFrame(cameraRows)
         summaryDf = pd.DataFrame(storeSummaryRows)
-        return cameraDf, summaryDf
+        comparisonDf = pd.DataFrame(comparisonRows).sort_values("ceco")
+        return cameraDf, summaryDf, comparisonDf
