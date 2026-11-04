@@ -100,8 +100,8 @@ class MonthlyReportService:
             opMinutes = getOperatingMinutesWithoutReport(capturedAt, now)
 
             # devCt: clasificar estado actual considerando ventana operativa (09:00 a 22:00) y umbral de 60 min
-            if capturedAt is None or opMinutes > 60:
-                if opMinutes > 780:
+            if capturedAt is None or opMinutes is None or opMinutes > 60:
+                if opMinutes is None or opMinutes > 780:
                     currentState = "OFFLINE / SIN REPORTE (>24H)"
                 else:
                     currentState = "SIN REPORTE (>60 MIN)"

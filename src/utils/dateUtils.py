@@ -66,9 +66,9 @@ def compressDayList(days: List[int]) -> str:
     return ", ".join(ranges)
 
 # devCt: calcula minutos transcurridos en horario operativo (09:00 a 22:00 lima)
-def getOperatingMinutesWithoutReport(dtStart: Optional[datetime], dtEnd: Optional[datetime] = None) -> int:
+def getOperatingMinutesWithoutReport(dtStart: Optional[datetime], dtEnd: Optional[datetime] = None) -> Optional[int]:
     if dtStart is None:
-        return 999999
+        return None
         
     import zoneinfo
     from datetime import time, timedelta

@@ -98,11 +98,15 @@ class DailyAlertService:
             opMinutes = getOperatingMinutesWithoutReport(lastReportAt, now)
 
             # devCt: no alertar si esta dentro de los 60 min operativos de arranque y grabando ok
-            if opMinutes <= 60 and allRec is True and (isRecording is True or isRecording is None):
+            if opMinutes is not None and opMinutes <= 60 and allRec is True and (isRecording is True or isRecording is None):
                 continue
 
             # clasificar estado actual y descripcion de detalle por camara considerando ventana operativa
-            if opMinutes > 780:
+            if opMinutes is None:
+                currentState = "OFFLINE / SIN REPORTE (>24H)"
+                detailText = "dvr sin comunicacion con agente central hace mas de 24 horas"
+                timeWithoutRecording = "mas de 48 horas sin reporte"
+            elif opMinutes > 780:
                 currentState = "OFFLINE / SIN REPORTE (>24H)"
                 detailText = f"dvr sin comunicacion en horario operativo hace {formatDuration(opMinutes)}"
                 timeWithoutRecording = formatDuration(opMinutes)
@@ -143,7 +147,7 @@ class DailyAlertService:
                     "ceco": ceco,
                     "tienda": storeName,
                     "channels": [],
-                    "minutes": opMinutes if opMinutes > 60 else minutesSinceReport,
+                    "minutes": opMinutes if (opMinutes is not None and opMinutes > 60) else minutesSinceReport,
                     "repCh": repCh,
                     "recCh": recCh,
                     "state": currentState,
@@ -171,8 +175,8 @@ class DailyAlertService:
             storeCeco, storeName, reportedCh, recordingCh, lastReportAt = r
             opMinutes = getOperatingMinutesWithoutReport(lastReportAt, now)
 
-            # devCt: si el dvr supera 60 minutos en horario operativo sin reporte, sus camaras activas son 0
-            if opMinutes > 60:
+            # devCt: si el dvr no tiene reporte o supera 60 minutos en horario operativo sin reporte, sus camaras activas son 0
+            if opMinutes is None or opMinutes > 60:
                 activeCh = 0
             else:
                 activeCh = recordingCh
