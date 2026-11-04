@@ -155,11 +155,11 @@ class DailyAlertService:
             storeCeco, storeName, reportedCh, recordingCh = r
             inactiveCh = max(0, reportedCh - recordingCh)
 
-            # devCt: calculo de discrepancias frente al tracking maestro (col c vs col f)
+            # devCt: calculo de discrepancias frente al tracking maestro (col f menos col d: listado menos camaras activas)
             if storeCeco in trackingMap:
                 trackingVal = trackingMap[storeCeco]
                 trackingDisplay = trackingVal
-                diff = reportedCh - trackingVal
+                diff = trackingVal - recordingCh
                 if diff == 0:
                     discrepancyText = "Sin discrepancias"
                 else:

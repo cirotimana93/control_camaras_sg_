@@ -172,11 +172,11 @@ class MonthlyReportService:
                 activeCams = 0
                 inactiveCams = 0
 
-            # devCt: calculo de discrepancias frente al tracking maestro (col c vs col f)
+            # devCt: calculo de discrepancias frente al tracking maestro (col f menos col d: listado menos camaras activas)
             if storeCeco in trackingMap:
                 trackingVal = trackingMap[storeCeco]
                 trackingDisplay = trackingVal
-                diff = totalCams - trackingVal
+                diff = trackingVal - activeCams
                 if diff == 0:
                     discrepancyText = "Sin discrepancias"
                 else:

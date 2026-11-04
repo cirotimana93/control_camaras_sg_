@@ -55,14 +55,14 @@ class ExcelExportService:
                 "Tipo": "Metrica Comparativa",
                 "Criticidad": "INFORMATIVA",
                 "Significado Tecnico": "Cantidad de canales operativos registrados para la tienda en el documento maestro de tracking (migracion iVMS & Hik-Connect). Muestra 'Sin informacion segun listado' si el CECO no figura en dicho archivo.",
-                "Accion Recomendada": "Comparar contra 'total de camaras' para validar que todas las camaras registradas en tienda esten migradas."
+                "Accion Recomendada": "Comparar contra 'total de camaras activas' para validar que todas las camaras migradas esten grabando."
             },
             {
                 "Concepto / Columna": "discrepancias",
                 "Tipo": "Metrica Comparativa",
                 "Criticidad": "ALERTA",
-                "Significado Tecnico": "Comparacion entre 'total de camaras' (Col C) y 'total de camaras segun el listado' (Col F). Indica 'Sin discrepancias' si coinciden, 'Discrepancia (N)' con la diferencia exacta si difieren, o 'Sin informacion segun listado' si no esta en el archivo de tracking.",
-                "Accion Recomendada": "Priorizar tiendas con discrepancia negativa para verificar canales que falten por registrar o migrar."
+                "Significado Tecnico": "Comparacion entre el listado de tracking (Col F) y las camaras activas (Col D), calculada como (listado menos camaras activas). Indica 'Sin discrepancias' si coinciden, 'Discrepancia (N)' con la diferencia exacta si difieren, o 'Sin informacion segun listado'.",
+                "Accion Recomendada": "Priorizar tiendas con discrepancia positiva (canales del listado que no estan grabando en vivo)."
             }
         ]
         return pd.DataFrame(legendData)
@@ -122,13 +122,13 @@ class ExcelExportService:
                 "Estado Actual": "total de camaras segun el listado",
                 "Criticidad": "INFORMATIVA",
                 "Significado Tecnico": "Cantidad de canales operativos registrados en el documento maestro de tracking (migracion iVMS & Hik-Connect). Muestra 'Sin informacion segun listado' si el CECO no figura.",
-                "Accion Recomendada": "Comparar contra 'total de camaras' para identificar desfasajes entre el inventario y el listado de migracion."
+                "Accion Recomendada": "Comparar contra 'total de camaras activas' para identificar desfasajes entre el inventario y la grabacion en vivo."
             },
             {
                 "Estado Actual": "discrepancias",
                 "Criticidad": "ALERTA",
-                "Significado Tecnico": "Comparacion matematica entre 'total de camaras' (Col C) y el listado de tracking (Col F). 'Sin discrepancias' (coinciden), 'Discrepancia (N)' (diferencia), o 'Sin informacion segun listado'.",
-                "Accion Recomendada": "Revisar tiendas con discrepancia para auditar consistencia con el inventario fisico."
+                "Significado Tecnico": "Comparacion matematica entre el listado de tracking (Col F) y las camaras activas (Col D), calculada como (listado menos camaras activas). 'Sin discrepancias' (coinciden), 'Discrepancia (N)' (diferencia), o 'Sin informacion segun listado'.",
+                "Accion Recomendada": "Revisar tiendas con discrepancia para auditar camaras que faltan grabar en vivo."
             }
         ]
         return pd.DataFrame(legendData)
