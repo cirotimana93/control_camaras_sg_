@@ -195,7 +195,7 @@ class MonthlyReportService:
             comparisonList.append({
                 "ceco": storeCeco,
                 "tienda": storeName,
-                "total de camaras": totalCams,
+                "total de puertos": totalCams,
                 "total de camaras activas": activeCams,
                 "total de camaras inactivas": inactiveCams,
                 "total de camaras segun el listado": trackingDisplay,

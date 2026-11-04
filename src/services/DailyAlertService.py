@@ -199,7 +199,7 @@ class DailyAlertService:
             comparisonRows.append({
                 "ceco": storeCeco,
                 "tienda": storeName,
-                "total de camaras": reportedCh,
+                "total de puertos": reportedCh,
                 "total de camaras activas": activeCh,
                 "total de camaras inactivas": inactiveCh,
                 "total de camaras segun el listado": trackingDisplay,
