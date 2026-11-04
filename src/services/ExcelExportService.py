@@ -30,11 +30,18 @@ class ExcelExportService:
                 "Accion Recomendada": "Revisar la fuente de poder de la camara y conexionado fisico del cable en tienda."
             },
             {
-                "Concepto / Columna": "SIN REPORTE",
+                "Concepto / Columna": "OFFLINE / SIN REPORTE (>24H)",
                 "Tipo": "Estado Actual",
                 "Criticidad": "ALTA",
-                "Significado Tecnico": "El DVR completo no ha transmitido telemetria al servidor central en las ultimas 48 horas.",
-                "Accion Recomendada": "Verificar encendido del DVR y conexion del cable de red/internet de la tienda."
+                "Significado Tecnico": "El equipo DVR o canal no transmite telemetria hace mas de 24 horas acumuladas en horario operativo (09:00 a 22:00). Causa probable: corte de energia prolongado o falla total de enlace.",
+                "Accion Recomendada": "Contactar con tienda o soporte de campo para verificar encendido del DVR y conexion de enlace de internet."
+            },
+            {
+                "Concepto / Columna": "SIN REPORTE (>60 MIN)",
+                "Tipo": "Estado Actual",
+                "Criticidad": "MEDIA",
+                "Significado Tecnico": "El equipo o canal supero los 60 minutos sin transmitir telemetria durante el horario de atencion (09:00 a 22:00). Se descuenta automaticamente el horario nocturno apagado.",
+                "Accion Recomendada": "Monitorear reconexion. Si el tiempo supera 2 horas de horario operativo, reportar a soporte tecnico."
             },
             {
                 "Concepto / Columna": "dias sin grabacion acumulado",
@@ -73,14 +80,14 @@ class ExcelExportService:
             {
                 "Estado Actual": "OFFLINE / SIN REPORTE (>24H)",
                 "Criticidad": "ALTA",
-                "Significado Tecnico": "El equipo DVR o agente de tienda no transmite telemetria hace mas de 24 horas. Causa probable: corte de energia prolongado, desconexion de red o corte de internet.",
-                "Accion Recomendada": "Contactar con tienda o soporte de campo para verificar encendido del DVR, luces del puerto Ethernet y conexion de enlace de internet."
+                "Significado Tecnico": "El equipo DVR o agente de tienda no transmite telemetria hace mas de 24 horas en horario operativo (09:00 a 22:00). Causa probable: corte de energia prolongado o corte de enlace.",
+                "Accion Recomendada": "Contactar con tienda o soporte de campo para verificar encendido del DVR y conexion de enlace de internet."
             },
             {
-                "Estado Actual": "SIN REPORTE (>30 MIN)",
+                "Estado Actual": "SIN REPORTE (>60 MIN)",
                 "Criticidad": "MEDIA",
-                "Significado Tecnico": "El DVR dejo de enviar reporte hace mas de 30 minutos (reciente). Causa probable: microcorte de enlace, reinicio de equipo o corte temporal de energia.",
-                "Accion Recomendada": "Monitorear reconexion automatica. Si el tiempo supera 2 horas, reportar a soporte tecnico."
+                "Significado Tecnico": "El DVR dejo de enviar reporte hace mas de 60 minutos durante horario de atencion (09:00 a 22:00). Descuenta automaticamente el horario nocturno apagado.",
+                "Accion Recomendada": "Monitorear reconexion automatica. Si el tiempo supera 2 horas operativas, reportar a soporte tecnico."
             },
             {
                 "Estado Actual": "ONLINE NO GRABA",

@@ -72,11 +72,11 @@ def buildHtmlSummary(monthlyDf, cameraDf, summaryDf, runTimestamp: str) -> str:
                     <div class="card-value-critical">{camerasWithGaps}</div>
                 </div>
                 <div class="card">
-                    <div class="card-title">DVRs Alerta (>30m)</div>
+                    <div class="card-title">DVRs Alerta (>60m)</div>
                     <div class="card-value-critical">{totalDvrAlerts}</div>
                 </div>
                 <div class="card">
-                    <div class="card-title">Camaras en Alerta (>30m)</div>
+                    <div class="card-title">Camaras en Alerta (>60m)</div>
                     <div class="card-value-critical">{totalDailyCameraAlerts}</div>
                 </div>
             </div>

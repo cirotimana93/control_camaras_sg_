@@ -64,3 +64,47 @@ def compressDayList(days: List[int]) -> str:
     ranges.append(f"{start}-{prev}" if start != prev else f"{start}")
     
     return ", ".join(ranges)
+
+# devCt: calcula minutos transcurridos en horario operativo (09:00 a 22:00 lima)
+def getOperatingMinutesWithoutReport(dtStart: Optional[datetime], dtEnd: Optional[datetime] = None) -> int:
+    if dtStart is None:
+        return 999999
+        
+    import zoneinfo
+    from datetime import time, timedelta
+    
+    limaTz = zoneinfo.ZoneInfo("America/Lima")
+    if dtEnd is None:
+        dtEnd = datetime.now(limaTz)
+        
+    if dtStart.tzinfo is None:
+        dtStart = dtStart.replace(tzinfo=limaTz)
+    else:
+        dtStart = dtStart.astimezone(limaTz)
+        
+    if dtEnd.tzinfo is None:
+        dtEnd = dtEnd.replace(tzinfo=limaTz)
+    else:
+        dtEnd = dtEnd.astimezone(limaTz)
+
+    if dtStart >= dtEnd:
+        return 0
+
+    totalSeconds = 0.0
+    currDate = dtStart.date()
+    endDate = dtEnd.date()
+
+    while currDate <= endDate:
+        openTime = datetime.combine(currDate, time(9, 0), tzinfo=limaTz)
+        closeTime = datetime.combine(currDate, time(22, 0), tzinfo=limaTz)
+
+        dayStart = max(dtStart, openTime)
+        dayEnd = min(dtEnd, closeTime)
+
+        if dayStart < dayEnd:
+            totalSeconds += (dayEnd - dayStart).total_seconds()
+
+        currDate += timedelta(days=1)
+
+    return int(totalSeconds // 60)
+

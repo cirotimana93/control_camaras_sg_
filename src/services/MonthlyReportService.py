@@ -2,7 +2,7 @@ from typing import Tuple
 import pandas as pd
 from datetime import datetime, timedelta
 from src.db import getDbConnection
-from src.utils.dateUtils import compressDateList
+from src.utils.dateUtils import compressDateList, getOperatingMinutesWithoutReport
 from src.utils.trackingUtils import getTrackingChannelsMap
 
 class MonthlyReportService:
@@ -23,7 +23,7 @@ class MonthlyReportService:
                 is_recording,
                 captured_at_utc
             FROM sch_cctv.tbl_dvr_recording_status
-            WHERE captured_at_utc >= NOW() - INTERVAL '48 hours'
+            WHERE captured_at_utc >= NOW() - INTERVAL '7 days'
             ORDER BY store_ceco, channel, captured_at_utc DESC
         )
         SELECT 
@@ -96,16 +96,23 @@ class MonthlyReportService:
             accumulatedDays = len(missingDates)
             isRecording = data["isRecording"]
             isOnline = data["isOnline"]
+            capturedAt = data["capturedAt"]
+            opMinutes = getOperatingMinutesWithoutReport(capturedAt, now)
 
-            # clasificar estado actual
-            if isRecording is True:
+            # devCt: clasificar estado actual considerando ventana operativa (09:00 a 22:00) y umbral de 60 min
+            if capturedAt is None or opMinutes > 60:
+                if opMinutes > 780:
+                    currentState = "OFFLINE / SIN REPORTE (>24H)"
+                else:
+                    currentState = "SIN REPORTE (>60 MIN)"
+            elif isRecording is True:
                 currentState = "GRABANDO"
             elif isRecording is False and isOnline is True:
                 currentState = "ONLINE NO GRABA"
             elif isOnline is False:
                 currentState = "OFFLINE"
             else:
-                currentState = "SIN REPORTE"
+                currentState = "SIN REPORTE (>60 MIN)"
 
             processedRows.append({
                 "ceco": storeCeco,
@@ -133,7 +140,7 @@ class MonthlyReportService:
             if states == {"GRABANDO"} and maxDays == 0:
                 dvrState = "OPERATIVO"
                 detailText = "todas las camaras grabando de forma continua sin perdidas"
-            elif "SIN REPORTE" in states or "OFFLINE" in states:
+            elif any("SIN REPORTE" in s or "OFFLINE" in s for s in states):
                 dvrState = "CRITICO / OBSERVADO"
                 detailText = f"{len(observedCams)} de {totalCams} camaras observadas. canales con falla: {affectedChannels}"
             else:
